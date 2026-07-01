@@ -1,7 +1,7 @@
 
 
 [![Python](https://img.shields.io/badge/python-3.13-0dc7ed.svg?labelColor=000000&logo=python)](https://www.python.org/)
-[![R](https://img.shields.io/badge/R-4.43db7ed.svg?labelColor=000000&logo=R)](https://www.r-project.org/)
+[![R](https://img.shields.io/badge/R-4.3db7ed.svg?labelColor=000000&logo=R)](https://www.r-project.org/)
 
 ![CMageR_logo slim](assets/logoLong_v2.png)
 
