@@ -1,0 +1,16 @@
+# Include the R scripts
+recursive-include cmager/r_source *
+
+# Include Quarto or RMarkdown reporting templates
+recursive-include cmager/reporting *.qmd *.Rmd
+
+# Exclude any unwanted cache files that might be sitting in your local directory
+global-exclude *.py[cod] __pycache__ *.so
+
+# Include the models files in the predictive step subdirectories
+#celltype
+recursive-include cmager/celltype/models *.pkl
+recursive-include cmager/celltype/models/model_features.tsv
+
+## cellage
+recursive-include cmager/cellage/models *.rds

@@ -1,0 +1,14 @@
+AtrialCardiomyocytes	#af3a4d
+VentricularCardiomyocytes	#b1756c
+CardiacConductionSystem	#d45633
+Fibroblasts	#9b6e4e
+MuralCells	#ffb92f
+PericardialCells	#b4f03b
+BloodVesselEndothelialCells	#72cc57
+EndocardialCells	#436e43
+LymphaticEndothelialCells	#85cca0
+EpicardialCells	#5eabb0
+Neurons	#7bbdff
+Glia	#403c90
+MyeloidCells	#420066
+LymphoidCells	#f553f6

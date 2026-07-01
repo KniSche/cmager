@@ -1,0 +1,6 @@
+Cardiomyocytes	#bc5950
+Mesenchymal	#af9c4c
+Endothelium	#599e58
+Epicardium	#5eabb0
+Neural	#5e75b1
+Leukocytes	#9a52a0

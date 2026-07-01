@@ -1,0 +1,19 @@
+# Ignore the metadata cache folder and all its contents
+metadata_cache/
+
+# Ignore Python compiled files
+__pycache__/
+*.pyc
+
+# Ignore package build metadata
+*.egg-info/
+
+# Ignore Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore OS-specific hidden files (Mac/Windows)
+.DS_Store
+Thumbs.db
+
+#Ignore some directory structure file I put together
+dir_structure.txt

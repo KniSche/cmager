@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cmager"
+version = "0.1.0"
+description = "Fetal Cardiac Single-Cell Annotation & Age Prediction Pipeline"
+readme = "README.md"
+requires-python = ">=3.13"
+authors = [
+    { name="Vincent R Knight-Schrijver", email="vincent.knightschrijver@gmail.com" }
+]
+# These mirror the Python dependencies from your environment.yml
+dependencies = [
+    "numpy",
+    "pandas",
+    "scanpy",
+    "anndata",
+    "click",
+    "celltypist"
+]
+
+[tool.setuptools]
+include-package-data = true
+
+[project.scripts]
+cmager = "cmager.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["cmager*"]
+exclude = ["metadata_cache*"]
+

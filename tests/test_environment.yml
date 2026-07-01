@@ -1,0 +1,30 @@
+name: cmager_test2
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+  
+dependencies:
+  # Core Python runtime & testing
+  - python=3.13
+  - pip
+  - pytest
+  - numpy
+  - pandas
+  - scanpy
+  - anndata
+  - click
+
+  # R Runtime & basic packages
+  - r-base=4.4
+  - r-readr
+  - r-foreach
+  - r-mda
+  - r-gamsel
+  - r-Matrix
+  - r-matrixStats
+  - r-anndata
+  
+  # Pip-specific installs
+  - pip:
+      - celltypist
