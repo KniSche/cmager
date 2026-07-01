@@ -7,7 +7,7 @@
 
 > **CMageR** | *Cardiomyocyte (CM)* *ager*
 >
-> What `cardiomyocytes` are you making? What `age` or `maturity` are they transcriptionally? 
+> What `cardiomyocytes` are you making? What `age` or `maturity` are they transcriptionally? If you have scRNA-seq data, 
 > CMageR is the first step towards a computational reference to help you find out the answer to these questions!
 
 * Trained on human fetal single-cell transcriptomics, CMageR is a predictive framework for cardiac cell types and cardiac cell ages of cells in scRNA-seq data.
