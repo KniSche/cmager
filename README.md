@@ -1,6 +1,23 @@
 
 
-![CMageR_logo slim](assets/logoSlim_v2.png)
+[![Nextflow](https://img.shields.io/badge/nextflow%20DSL2-%E2%89%A525.04.7.5955-23aa62.svg?labelColor=000000&logo=nextflow)](https://www.nextflow.io/)
+[![Docker](https://img.shields.io/badge/docker-28.3.0-0db7ed.svg?labelColor=000000&logo=docker)](https://www.docker.com/)
+[![Python](https://img.shields.io/badge/python-3.9-0dc7ed.svg?labelColor=000000&logo=python)](https://www.python.org/)
+[![R](https://img.shields.io/badge/R-4.3-7db7ed.svg?labelColor=000000&logo=R)](https://www.r-project.org/)
+
+![CMageR_logo slim](assets/logoLong_v2.png)
+
+## About
+
+> **CMageR** | *Cardiomyocytes (CM)*, *ager*
+>
+> What `cardiomyocytes` are you making? What `age` or `maturity` are they transcriptionally? 
+> CMageR is the first step towards a computational reference to help you find out the answer to these questions!
+
+* Trained on human fetal single-cell transcriptomics, CMageR is a predictive framework for cardiac cell types and cardiac cell ages of cells in scRNA-seq data.
+* It is intended for discrete classification of cell types within culture (in vitro, or in vivo), and their ages within a period of 4 to 15 PCW.
+* It uses a custom-built pipeline in python combining logistic regression (CellTypist), and multivariate generalised additive models in R (gamsel)
+
 
 # CMageR: Fetal Cardiac Single-Cell Annotation & Age Prediction Pipeline
 
