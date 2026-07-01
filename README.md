@@ -1,3 +1,7 @@
+
+
+![CMageR_logo slim](assets/logoSlim_v2.png)
+
 # CMageR: Fetal Cardiac Single-Cell Annotation & Age Prediction Pipeline
 
 **CMageR** is a high-performance, memory-efficient Python pipeline designed for processing cardiac single-cell and single-nuclei RNA-sequencing (scRNA-seq/snRNA-seq) datasets ranging from **4 to 15 post-conceptional weeks (PCW)**. 
