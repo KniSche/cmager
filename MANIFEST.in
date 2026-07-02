@@ -1,5 +1,5 @@
 # Include the R scripts
-recursive-include cmager/r_source *
+graft cmager/r_source
 
 # Include Quarto or RMarkdown reporting templates
 recursive-include cmager/reporting *.qmd *.Rmd
