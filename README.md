@@ -22,7 +22,7 @@ The pipeline automates:
 
 ## Installation & Setup
 
-Because this tool uses both R and Python, it requires a custom environment. It was build and tested in conda using the supplied environment file. Firstly, rebuild the working environment using the provided conda `environment.yml` file. This handles all specific installations, including Scanpy, AnnData, CellTypist, and tracking utilities.
+Because this tool uses both R and Python, it requires a custom environment. It was build and tested in conda using the supplied environment file. Firstly, rebuild the working environment using the provided conda `environment.yml` file. This handles all specific installations, including Scanpy, AnnData, CellTypist, and utilities.
 
 ### Prerequisites
 Ensure you have [Miniconda](https://docs.conda.io/en/latest/miniconda.html) or [Anaconda](https://www.anaconda.com/) installed on your machine.
@@ -30,7 +30,7 @@ Ensure you have [Miniconda](https://docs.conda.io/en/latest/miniconda.html) or [
 ### Step-by-Step Installation using conda and pip
 
 1. **Create the Environment from the YAML File**
-   This command reads the `environment.yml` configuration from this repository to resolves cross-dependencies and build the environment called `cmager`:
+   This command reads the `environment.yml` configuration from this repository to resolves cross-dependencies and build the environment called `cmager`. This step takes a minute or two while conda solves the environment:
    ```bash
    conda env create -f https://raw.githubusercontent.com/knische/cmager/main/environment.yml
    ```
