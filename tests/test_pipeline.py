@@ -25,7 +25,7 @@ def test_h5ad_processing_end_to_end(tmp_path):
         input_dir=str(input_h5ad),
         output_dir=str(tmp_path),
         chunk_size=100,  # Keep it tiny for fast testing
-        low_ram=True,
+        skip_reductions=True,
         workers=6
     )
     

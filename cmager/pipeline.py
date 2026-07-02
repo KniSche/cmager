@@ -200,7 +200,7 @@ def process_single_sample(
     cellage_model_dir: str, 
     output_dir: str,
     chunk_size: int, 
-    low_ram: bool, 
+    skip_reductions: bool, 
     modality: str = None, 
     keep_temp_files: bool = False, 
     verbose: bool = False, 
@@ -286,7 +286,7 @@ def process_single_sample(
             chunk = predict_celltypes(
               chunk, 
               model_dir=celltype_model_dir, 
-              low_ram=True,
+              skip_reductions=True,
               verbose=verbose
             ) 
               
@@ -407,7 +407,7 @@ def concatenate_and_save(processed_file_paths: List[str], output_dir: str, origi
     
     logger.debug(f"💾 Master metadata table successfully pooled at: {master_csv_path}")
 
-    # --- PART 2: LOW-RAM ANN MATRIX CONCATENATION ---
+    # --- PART 2: MATRIX CONCATENATION ---
     logger.debug("📦 Pooling expression matrices sequentially...")
     
     first_adata = ad.read_h5ad(processed_file_paths[0])
@@ -476,7 +476,7 @@ def concatenate_and_save(processed_file_paths: List[str], output_dir: str, origi
                 logger.debug(f"  Moved: {target_file} -> {sample_id}/")
         
         
-def run_batch_pipeline(input_dir: str, output_dir: str, chunk_size: int, low_ram: bool, workers: int, 
+def run_batch_pipeline(input_dir: str, output_dir: str, chunk_size: int, skip_reductions: bool, workers: int, 
                        keep_temp_files: bool = False, modality: str = None, batch_key: str = None, verbose: bool = False):
     """
     Batch pipeline, running through all of the steps in parallel.
@@ -541,7 +541,7 @@ def run_batch_pipeline(input_dir: str, output_dir: str, chunk_size: int, low_ram
                 output_dir=output_dir,
                 chunk_size=chunk_size,
                 modality=modality,
-                low_ram=low_ram,
+                skip_reductions=skip_reductions,
                 keep_temp_files=keep_temp_files,
                 verbose=verbose,
                 progress_queue=progress_queue

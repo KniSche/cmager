@@ -39,7 +39,7 @@ def suppress_stdout(enable: bool):
 def predict_celltypes(
     adata: ad.AnnData, 
     model_dir: str, 
-    low_ram: bool = False,
+    skip_reductions: bool = False,
     verbose: bool = False
 ) -> ad.AnnData:
     """
@@ -48,9 +48,9 @@ def predict_celltypes(
     
     Args:
         adata (ad.AnnData): The input single-cell dataset or matrix slice.
-        model_dir (str): Absolute or relative path to the pre-trained .pkl models.
-        low_ram (bool): Inherited flag for downstream behavior mapping (unused here but preserved for API consistency).
-        verbose (bool): If False, suppresses internal CellTypist terminal outputs.
+        model_dir (str): path to the pre-trained .pkl models.
+        skip_reductions (bool): Inherited flag for downstream behavior mapping.
+        verbose (bool): If False, suppresses terminal outputs.
                           
     Returns:
         ad.AnnData: The updated AnnData object with cell types stored in .obs 

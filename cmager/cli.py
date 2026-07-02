@@ -1,13 +1,41 @@
 """
 Command Line Interface (CLI) for CMageR.
-Handles user inputs, validates arguments, and triggers the master orchestration pipeline.
 """
 
 import os
 import click
 from cmager.pipeline import run_batch_pipeline
 
-@click.command()
+SPLASH_SCREEN = r"""
+ ___________________________________________________________________________
+ 
+  ###  #   # |
+ #     ##### |   CMageR:
+ #     # # # |   Cell Type and Cell Age prediction
+  ###  #   # |   for cardiac cells between 4-15 PCW.
+ ----------- |   1. Cell type annotation: 
+             |      semi-hierarchical classification with CellTypist
+ ----------- |   
+          0  |   2. Cell age prediction:
+ ----------- |      multivariate generalised additive model
+             |   
+ -----0----- |   Training data were carefully curated from fetal heart data
+             |   single cell and single nuclei RNA sequencing
+ ---0------- |   Publications: 
+ ___________________________________________________________________________
+"""
+
+# Custom Command class to safely force the splash screen to display on --help
+class SplashCommand(click.Command):
+    def format_help(self, ctx, formatter):
+        # 1. Print the splash screen with cyan color
+        click.echo(click.style(SPLASH_SCREEN, fg="cyan", bold=True))
+        # 2. Print the normal options (--input-dir, etc.) underneath
+        super().format_help(ctx, formatter)
+
+
+# Attach the custom help class directly to your main command
+@click.command(cls=SplashCommand, context_settings=dict(help_option_names=['-h', '--help']))
 @click.version_option(version="0.1.0")
 @click.option(
     "--input-dir", "-i",
@@ -49,9 +77,9 @@ from cmager.pipeline import run_batch_pipeline
     help="Column name in .obs to split large datasets by for optimized parallel processing."
 )
 @click.option(
-    "--low-ram", 
+    "--skip-reductions", 
     is_flag=True, 
-    help="Skip computationally heavy UMAP and PCA dimensional reductions to save memory."
+    help="Skips UMAP and PCA dimensional reductions to save memory."
 )
 @click.option(
     "--keep-temp-files",
@@ -61,19 +89,13 @@ from cmager.pipeline import run_batch_pipeline
 @click.option(
     "--verbose", "-v",
     is_flag=True,
-    help="Enable detailed execution logs and chunk-level tracking in the terminal."
+    help="Prints status updates (very detailed) across all workers in the terminal."
 )
+
+
 def main(input_dir: str, output_dir: str, chunk_size: int, workers: int, 
-         modality: str, batch: str, low_ram: bool, keep_temp_files: bool, verbose: bool):
-    """
-    CMageR: Cell Age prediction for 4-15 PCW in cardiac cells. 
-    
-    1. Performs cell type annotation through semi-hierarchical classification with CellTypist
-    2. Performs cell age prediction through multivariate generalised additive model
-    
-    In both cases, data were carefully curated from fetal heart single cell and single nuclei RNA sequencing.
-    """
-    
+         modality: str, batch: str, skip_reductions: bool, keep_temp_files: bool, verbose: bool):
+   
     # 1. Prepare the execution environment
     os.makedirs(output_dir, exist_ok=True)
     
@@ -83,7 +105,7 @@ def main(input_dir: str, output_dir: str, chunk_size: int, workers: int,
         output_dir=output_dir, 
         chunk_size=chunk_size,
         workers=workers,
-        low_ram=low_ram,
+        skip_reductions=skip_reductions,
         modality=modality,
         batch_key=batch,
         keep_temp_files=keep_temp_files,
