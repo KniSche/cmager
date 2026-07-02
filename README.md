@@ -47,7 +47,7 @@ Ensure you have [Miniconda](https://docs.conda.io/en/latest/miniconda.html) or [
    ```
 
 4. **confirm that the package is installed**
-   Check out the usage and help page. This step may take a moment:
+   Check out the usage and help page. This step may take a moment the first time:
    ```bash
    cmager --help
    ```

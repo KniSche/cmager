@@ -144,52 +144,67 @@ def pre_split_datasets_by_batch(discovered: Dict[str, dict], batch_key: str, out
 
 def standardise_gene_symbols(adata: ad.AnnData, ref_features_df: pd.DataFrame, min_match_threshold: float = 0.10) -> ad.AnnData:
     """
-    Scans the adata.var_names and all var columns after loading against the model reference list of genes.
-    Starts with index, and then checks other columns, replacing the index if it finds a higher match.
+    Scans the adata.var_names and all var columns against the model reference list.
+    Independently locates the best columns for Gene Symbols and Ensembl IDs.
     """
-    ref_genes = set(ref_features_df[1].dropna().tolist())
+    # Extract reference sets using column positions (0 = Ensembl, 1 = Symbol)
+    ref_ensembl = set(ref_features_df.iloc[:, 0].dropna().astype(str).tolist())
+    ref_symbols = set(ref_features_df.iloc[:, 1].dropna().astype(str).tolist())
 
-    if not ref_genes:
+    if not ref_symbols and not ref_ensembl:
         return adata
 
+    # Helper function to calculate both match rates simultaneously
+    def get_match_rates(gene_list):
+        ens_matches = sum(1 for g in gene_list if g in ref_ensembl)
+        sym_matches = sum(1 for g in gene_list if g in ref_symbols)
+        ens_rate = ens_matches / len(ref_ensembl) if ref_ensembl else 0
+        sym_rate = sym_matches / len(ref_symbols) if ref_symbols else 0
+        return ens_rate, sym_rate
+
     # 1. Evaluate current var_names index
-    current_matches = sum(1 for gene in adata.var_names if gene in ref_genes)
-    current_rate = current_matches / len(ref_genes)
+    current_genes = adata.var_names.astype(str).tolist()
+    best_ens_rate, best_sym_rate = get_match_rates(current_genes)
+    best_ens_col, best_sym_col = 'index', 'index'
     
-    best_rate = current_rate
-    best_column = None 
+    logger.debug(f"Checking index. Initial rates -> Ensembl: {best_ens_rate:.2%} | Symbol: {best_sym_rate:.2%}")
 
-    logger.debug(f"Checking gene overlap with models, current index matches at: {current_rate:.2%}")
-
-    # 2. Scan available columns for a superior match
+    # 2. Scan available columns for superior matches
     for col in adata.var.columns:
         sample_genes = adata.var[col].astype(str).tolist()
-        matches = sum(1 for gene in sample_genes if gene in ref_genes)
-        match_rate = matches / len(ref_genes)
+        ens_r, sym_r = get_match_rates(sample_genes)
         
-        if match_rate > best_rate:
-            best_rate = match_rate
-            best_column = col
-
-    # 3. Apply changes if criteria are met
-    if best_column is not None and best_rate >= min_match_threshold:
-        logger.debug(f"🎯 Switching var_names to superior column: '{best_column}' (Match rate: {best_rate:.2%})")
-        
-        if adata.var_names.name is None:
-            adata.var["original_features"] = adata.var_names
-        else:
-            adata.var[adata.var_names.name] = adata.var_names
+        if ens_r > best_ens_rate:
+            best_ens_rate, best_ens_col = ens_r, col
             
-        adata.var_names = adata.var[best_column].astype(str)
-        
-    elif best_rate < min_match_threshold:
-        logger.info(f"❌ Critical Warning: Best gene match rate is dangerously low ({best_rate:.2%}). Models may fail.")
-        
+        if sym_r > best_sym_rate:
+            best_sym_rate, best_sym_col = sym_r, col
+
+    # 3. Apply Ensembl IDs (Force into 'gene_ids' for downstream mapping)
+    if best_ens_rate >= min_match_threshold:
+        logger.debug(f"Rescuing Ensembl IDs from '{best_ens_col}' (Match rate: {best_ens_rate:.2%})")
+        if best_ens_col == 'index':
+            adata.var['gene_ids'] = adata.var_names
+        else:
+            adata.var['gene_ids'] = adata.var[best_ens_col].astype(str)
+
+    # 4. Apply Gene Symbols (Switch var_names if a better column exists)
+    if best_sym_rate >= min_match_threshold:
+        if best_sym_col != 'index':
+            logger.debug(f"Switching var_names to superior symbol column: '{best_sym_col}' (Match rate: {best_sym_rate:.2%})")
+            
+            if adata.var_names.name is None:
+                adata.var["original_features"] = adata.var_names
+            else:
+                adata.var[adata.var_names.name] = adata.var_names
+                
+            adata.var_names = adata.var[best_sym_col].astype(str)
     else:
-        logger.debug(f"✅ Current index confirmed as optimal (Match rate: {best_rate:.2%}).")
+        logger.info(f"⚠️ Warning: Best gene symbol match rate is low ({best_sym_rate:.2%}). Relying on Ensembl IDs for mapping.")
 
     adata.var_names_make_unique()
     return adata
+    
 
 
 def process_single_sample(
@@ -354,6 +369,35 @@ def process_single_sample(
         loaded_chunks = [ad.read_h5ad(p) for p in temp_chunk_paths]
         
         sample_adata = ad.concat(loaded_chunks, axis=0, join="outer", merge="same")
+        
+        
+        
+        # calculate UMAPs on the per-sample_ID basis
+        if not skip_reductions:
+            logger.debug(f"🗺️ Calculating UMAP for sample {sample_id}...")
+            bdata = sample_adata.copy() 
+
+            sc.pp.filter_genes(bdata, min_cells=3)
+            sc.pp.highly_variable_genes(bdata, min_mean=0.0125, max_mean=3, min_disp=0.5)
+            bdata = bdata[:, bdata.var.highly_variable].copy()
+
+            sc.pp.scale(bdata, max_value=10)
+            sc.tl.pca(bdata, svd_solver='arpack')
+            
+            sc.pp.neighbors(bdata, n_neighbors=10, n_pcs=40)
+            sc.tl.umap(bdata)
+
+            # Map coordinates back to the original object
+            sample_adata.obsm["X_umap"] = bdata.obsm["X_umap"]
+
+            del bdata
+            gc.collect()
+            logger.debug(f"🎉 CellType and UMAP annotation complete!")
+        else:
+            logger.debug(f"⏭️ skipping PCA and UMAP calculations (--skip-reductions)")
+            
+        
+        # write / save adata
         sample_adata.write_h5ad(sample_output_h5ad)
         
         if not keep_temp_files:

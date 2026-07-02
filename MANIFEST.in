@@ -6,6 +6,7 @@ recursive-include cmager/reporting *.qmd *.Rmd
 
 # Exclude any unwanted cache files that might be sitting in your local directory
 global-exclude *.py[cod] __pycache__ *.so
+global-exclude test_results/ *
 
 # Include the models files in the predictive step subdirectories
 #celltype

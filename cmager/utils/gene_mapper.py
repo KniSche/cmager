@@ -136,7 +136,10 @@ class HGNCManifoldMapper:
         query_ensembl_ids = adata.var.get('gene_ids', [None] * adata.n_vars)
         
         for q_symbol, q_native_ens in zip(adata.var_names, query_ensembl_ids):
-            q_native_ens_clean = str(q_native_ens).strip() if pd.notna(q_native_ens) else None
+            # TWEAK: Ensure "nan" or empty strings are scrubbed properly
+            q_native_ens_clean = str(q_native_ens).strip()
+            if pd.isna(q_native_ens) or q_native_ens_clean.lower() == "nan" or not q_native_ens_clean:
+                q_native_ens_clean = None
             
             # Resolution Step: Infer Ensembl ID via manifold if native tracking is absent
             discovered_query_ensembl = q_native_ens_clean if q_native_ens_clean else self.get_ensembl_via_manifold(q_symbol)
@@ -145,7 +148,7 @@ class HGNCManifoldMapper:
             target_symbol = q_symbol
             mapping_method = "No Match (Retained Query)"
             
-            # Tier 1 & 2: Structural Match via Ensembl ID (Native or Manifold-Discovered)
+            # Tier 1 & 2: Structural Match via Ensembl ID
             if discovered_query_ensembl and discovered_query_ensembl in model_by_ensembl:
                 target_symbol = model_by_ensembl[discovered_query_ensembl]
                 mapping_method = "Provided EnsemblID Match" if q_native_ens_clean else "HGNC_EnsemblID Manifold Match"
