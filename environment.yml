@@ -1,4 +1,4 @@
-name: cmager_test2
+name: cmager
 channels:
   - conda-forge
   - bioconda
