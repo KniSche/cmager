@@ -46,10 +46,10 @@ Ensure you have [Miniconda](https://docs.conda.io/en/latest/miniconda.html) or [
    pip install git+https://github.com/knische/cmager.git
    ```
 
-4. **install the package as a command line interface (CLI)**
-   This command reads your `environment.yml` configuration, resolves all cross-dependencies, and builds an isolated workspace named `cmager`:
+4. **confirm that the package is installed**
+   Check out the usage and help page. This step may take a moment:
    ```bash
-   pip install -e .
+   cmager --help
    ```
 
 
