@@ -43,7 +43,7 @@ Ensure you have [Miniconda](https://docs.conda.io/en/latest/miniconda.html) or [
 2. **using pip to install from github**
    This command installs the package cmager from this repository:
    ```bash
-   pip install git+https://github.com/yourusername/cmager.git
+   pip install git+https://github.com/knische/cmager.git
    ```
 
 4. **install the package as a command line interface (CLI)**
