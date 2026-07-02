@@ -10,7 +10,7 @@ global-exclude *.py[cod] __pycache__ *.so
 # Include the models files in the predictive step subdirectories
 #celltype
 recursive-include cmager/celltype/models *.pkl
-recursive-include cmager/celltype/models/model_features.tsv
+recursive-include cmager/celltype/models model_features.tsv
 
 ## cellage
 recursive-include cmager/cellage/models *.rds
