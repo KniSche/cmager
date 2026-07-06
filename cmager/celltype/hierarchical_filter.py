@@ -10,6 +10,7 @@ Subprocess written in R:
 """
 
 import os
+import tempfile
 import logging
 import subprocess
 import pandas as pd
