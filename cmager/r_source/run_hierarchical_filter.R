@@ -15,17 +15,11 @@ if (length(args) < 5) {
   stop("❌ Not enough arguments provided to Rscript. Expected 5.")
 }
 
-meta_path        <- args[1] 
-prob_coarse_path <- args[2] 
-prob_mid_path    <- args[3] 
-prob_fine_path   <- args[4] 
-r_results_path   <- args[5] 
-
-# ─── FIX 3: CHANGE THE R WORKING DIRECTORY TO YOUR CLEAN CHUNK STORAGE ──────
-# If the sourced functions use relative paths like "R_temp", it will now generate
-# safely inside your writable, isolated chunk folder.
-setwd(dirname(r_results_path))
-
+meta_path        <- args[1] # The metadata containing predicted labels (.obs)
+prob_coarse_path <- args[2] # Coarse probability matrix CSV
+prob_mid_path    <- args[3] # Mid probability matrix CSV
+prob_fine_path   <- args[4] # Fine probability matrix CSV
+r_results_path   <- args[5] # Target output CSV path for filtered results
 
 # --- PHASE 2: ENVIRONMENT & SCRIPT RESOLUTION ---
 # Dynamically resolve where this script lives to source relative helper files robustly

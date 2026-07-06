@@ -46,10 +46,10 @@ def hierarchical_filtering(
     PACKAGE_ROOT = os.path.dirname(CURRENT_FILE_DIR)             
     R_SCRIPT_PATH = os.path.join(PACKAGE_ROOT, "r_source", "run_hierarchical_filter.R")
     
-    # ─── FIX 1: ISOLATE THE ENTIRE DIRECTORY PER CHUNK ────────────────────────
-    temp_files_dir = os.path.join(output_dir, f"temp_filter_{sample_id}_chk{chunk_id}")
+    temp_files_dir = os.path.join(output_dir, "temp_files")
     os.makedirs(temp_files_dir, exist_ok=True)
     
+    # Assign unique temp files using sample_id + chunk_id to avoid multi-process race conditions
     prefix = f"temp_{sample_id}_chk{chunk_id}"
     meta_path = os.path.join(temp_files_dir, f"{prefix}_obs.csv")
     prob_coarse_path = os.path.join(temp_files_dir, f"{prefix}_probs_coarse.csv")
@@ -78,14 +78,46 @@ def hierarchical_filtering(
         df_fine.to_csv(prob_fine_path)
         
         # --- PHASE 3: EXTERNAL R EXECUTION ---
+        # This implementation forces R to use a local, rather than global /tmp folder.
+        # This fix was put here under conditions where the OS using normal /tmp has write permission issues
+        # or low space.
+        # ─── STEP A: CONVERT TO ABSOLUTE PATHS SO RELATIVE PATHS DON'T BREAK ───
+        abs_meta = os.path.abspath(meta_path)
+        abs_coarse = os.path.abspath(prob_coarse_path)
+        abs_mid = os.path.abspath(prob_mid_path)
+        abs_fine = os.path.abspath(prob_fine_path)
+        abs_results = os.path.abspath(r_results_path)
+
         cmd = [
             "Rscript", R_SCRIPT_PATH,
-            meta_path, prob_coarse_path, prob_mid_path, prob_fine_path, r_results_path
+            abs_meta, abs_coarse, abs_mid, abs_fine, abs_results
         ]
         
-        # ─── FIX 2: FORCE SUBPROCESS TO RUN INSIDE THE ISOLATED CHUNK DIR ──────
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True, cwd=temp_files_dir)
+        # ─── STEP B: CREATE A HIDDEN INTERNAL SANDBOX FOR THIS CHUNK'S R ENGINE ───
+        # This stays inside your original flat 'temp_files' directory
+        r_sandbox = os.path.abspath(os.path.join(temp_files_dir, f"r_sandbox_chk{chunk_id}"))
+        os.makedirs(r_sandbox, exist_ok=True)
         
+        # ─── STEP C: REDIRECT ALL R TEMP CHANNELS TO THE SANDBOX ───────────────
+        custom_env = os.environ.copy()
+        custom_env["TMPDIR"] = r_sandbox
+        custom_env["TMP"] = r_sandbox
+        custom_env["TEMP"] = r_sandbox
+        
+        # Run the execution completely sandboxed
+        result = subprocess.run(
+            cmd, 
+            capture_output=True, 
+            text=True, 
+            check=True,
+            cwd=r_sandbox,
+            env=custom_env
+        )
+        
+        # ─── STEP D: OPTIONAL CLEANUP OF THE EMPTY SANDBOX FOLDER ──────────────
+        # R cleans up its own session files on exit, leaving an empty directory.
+        if not keep_temp_files and os.path.exists(r_sandbox):
+            os.rmdir(r_sandbox)
         # --- PHASE 4: RESULT RETRIEVAL ---
         filter_outputs = pd.read_csv(r_results_path, index_col=0)
         return filter_outputs
