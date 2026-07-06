@@ -14,6 +14,7 @@ import logging
 import subprocess
 import pandas as pd
 import anndata as ad
+import shutil
 
 logger = logging.getLogger("cmager")
 
@@ -134,7 +135,8 @@ def hierarchical_filtering(
         
     finally:
         # --- PHASE 5: CLEANUP ---
-        if not keep_temp_files:
+        if not keep_temp_files and os.path.exists(r_sandbox):
+            shutil.rmtree(r_sandbox, ignore_errors=True)  
             for temp_file in [meta_path, prob_coarse_path, prob_mid_path, prob_fine_path, r_results_path]:
                 if os.path.exists(temp_file): 
                     os.remove(temp_file)
