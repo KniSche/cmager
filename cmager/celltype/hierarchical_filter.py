@@ -46,10 +46,10 @@ def hierarchical_filtering(
     PACKAGE_ROOT = os.path.dirname(CURRENT_FILE_DIR)             
     R_SCRIPT_PATH = os.path.join(PACKAGE_ROOT, "r_source", "run_hierarchical_filter.R")
     
-    temp_files_dir = os.path.join(output_dir, "temp_files")
+    # ─── FIX 1: ISOLATE THE ENTIRE DIRECTORY PER CHUNK ────────────────────────
+    temp_files_dir = os.path.join(output_dir, f"temp_filter_{sample_id}_chk{chunk_id}")
     os.makedirs(temp_files_dir, exist_ok=True)
     
-    # Assign unique temp files using sample_id + chunk_id to avoid multi-process race conditions
     prefix = f"temp_{sample_id}_chk{chunk_id}"
     meta_path = os.path.join(temp_files_dir, f"{prefix}_obs.csv")
     prob_coarse_path = os.path.join(temp_files_dir, f"{prefix}_probs_coarse.csv")
@@ -83,7 +83,8 @@ def hierarchical_filtering(
             meta_path, prob_coarse_path, prob_mid_path, prob_fine_path, r_results_path
         ]
         
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        # ─── FIX 2: FORCE SUBPROCESS TO RUN INSIDE THE ISOLATED CHUNK DIR ──────
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True, cwd=temp_files_dir)
         
         # --- PHASE 4: RESULT RETRIEVAL ---
         filter_outputs = pd.read_csv(r_results_path, index_col=0)
