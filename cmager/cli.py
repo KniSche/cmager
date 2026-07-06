@@ -36,7 +36,7 @@ class SplashCommand(click.Command):
 
 # Attach the custom help class directly to your main command
 @click.command(cls=SplashCommand, context_settings=dict(help_option_names=['-h', '--help']))
-@click.version_option(version="0.1.0")
+@click.version_option(version="0.1.3")
 @click.option(
     "--input-dir", "-i",
     type=click.Path(exists=True, file_okay=False, dir_okay=True, readable=True),

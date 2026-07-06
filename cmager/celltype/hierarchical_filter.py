@@ -10,12 +10,10 @@ Subprocess written in R:
 """
 
 import os
-import tempfile
 import logging
 import subprocess
 import pandas as pd
 import anndata as ad
-import shutil
 
 logger = logging.getLogger("cmager")
 
@@ -80,46 +78,13 @@ def hierarchical_filtering(
         df_fine.to_csv(prob_fine_path)
         
         # --- PHASE 3: EXTERNAL R EXECUTION ---
-        # This implementation forces R to use a local, rather than global /tmp folder.
-        # This fix was put here under conditions where the OS using normal /tmp has write permission issues
-        # or low space.
-        # ─── STEP A: CONVERT TO ABSOLUTE PATHS SO RELATIVE PATHS DON'T BREAK ───
-        abs_meta = os.path.abspath(meta_path)
-        abs_coarse = os.path.abspath(prob_coarse_path)
-        abs_mid = os.path.abspath(prob_mid_path)
-        abs_fine = os.path.abspath(prob_fine_path)
-        abs_results = os.path.abspath(r_results_path)
-
         cmd = [
             "Rscript", R_SCRIPT_PATH,
-            abs_meta, abs_coarse, abs_mid, abs_fine, abs_results
+            meta_path, prob_coarse_path, prob_mid_path, prob_fine_path, r_results_path
         ]
         
-        # ─── STEP B: CREATE A HIDDEN INTERNAL SANDBOX FOR THIS CHUNK'S R ENGINE ───
-        # This stays inside your original flat 'temp_files' directory
-        r_sandbox = os.path.abspath(os.path.join(temp_files_dir, f"r_sandbox_chk{chunk_id}"))
-        os.makedirs(r_sandbox, exist_ok=True)
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
         
-        # ─── STEP C: REDIRECT ALL R TEMP CHANNELS TO THE SANDBOX ───────────────
-        custom_env = os.environ.copy()
-        custom_env["TMPDIR"] = r_sandbox
-        custom_env["TMP"] = r_sandbox
-        custom_env["TEMP"] = r_sandbox
-        
-        # Run the execution completely sandboxed
-        result = subprocess.run(
-            cmd, 
-            capture_output=True, 
-            text=True, 
-            check=True,
-            cwd=r_sandbox,
-            env=custom_env
-        )
-        
-        # ─── STEP D: OPTIONAL CLEANUP OF THE EMPTY SANDBOX FOLDER ──────────────
-        # R cleans up its own session files on exit, leaving an empty directory.
-        if not keep_temp_files and os.path.exists(r_sandbox):
-            os.rmdir(r_sandbox)
         # --- PHASE 4: RESULT RETRIEVAL ---
         filter_outputs = pd.read_csv(r_results_path, index_col=0)
         return filter_outputs
@@ -136,8 +101,7 @@ def hierarchical_filtering(
         
     finally:
         # --- PHASE 5: CLEANUP ---
-        if not keep_temp_files and os.path.exists(r_sandbox):
-            shutil.rmtree(r_sandbox, ignore_errors=True)  
+        if not keep_temp_files:
             for temp_file in [meta_path, prob_coarse_path, prob_mid_path, prob_fine_path, r_results_path]:
                 if os.path.exists(temp_file): 
                     os.remove(temp_file)
