@@ -20,7 +20,7 @@ dependencies:
   - r-readr
   - r-foreach
   - r-mda
-  - r-gamsel # commented out as unavailable when installing in Windows
+  - r-gamsel
   - r-Matrix
   - r-matrixStats
   - r-anndata
