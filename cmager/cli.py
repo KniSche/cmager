@@ -4,7 +4,12 @@ Command Line Interface (CLI) for CMageR.
 
 import os
 import click
+import subprocess
+import logging
+
 from cmager.pipeline import run_batch_pipeline
+
+logger = logging.getLogger("cmager")
 
 SPLASH_SCREEN = r"""
  ___________________________________________________________________________
@@ -14,7 +19,7 @@ SPLASH_SCREEN = r"""
  #     # # # |   Cell Type and Cell Age prediction
   ###  #   # |   for cardiac cells between 4-15 PCW.
  ----------- |   1. Cell type annotation: 
-             |      semi-hierarchical classification with CellTypist
+             |      CellTypist with semi-hierarchical classification
  ----------- |   
           0  |   2. Cell age prediction:
  ----------- |      multivariate generalised additive model
@@ -25,17 +30,15 @@ SPLASH_SCREEN = r"""
  ___________________________________________________________________________
 """
 
-# Custom Command class to safely force the splash screen to display on --help
 class SplashCommand(click.Command):
     def format_help(self, ctx, formatter):
-        # 1. Print the splash screen with cyan color
         click.echo(click.style(SPLASH_SCREEN, fg="cyan", bold=True))
-        # 2. Print the normal options (--input-dir, etc.) underneath
         super().format_help(ctx, formatter)
-
-
-# Attach the custom help class directly to your main command
+     
 @click.command(cls=SplashCommand, context_settings=dict(help_option_names=['-h', '--help']))
+
+
+
 @click.version_option(version="0.1.3")
 @click.option(
     "--input-dir", "-i",
@@ -92,14 +95,35 @@ class SplashCommand(click.Command):
     help="Prints status updates (very detailed) across all workers in the terminal."
 )
 
+#########################################################################################
+def install_r_dependencies():
+    """
+    Checks for missing R packages and silently installs CRAN binaries 
+    during first execution. Requires zero compilers on Windows/macOS/Linux.
+    """
+    r_auto_install_code = """
+    if (!requireNamespace('gamsel', quietly = TRUE)) {
+        options(repos = c(CRAN = 'https://cloud.r-project.org'))
+        install.packages('gamsel', quiet = TRUE)
+    }
+    """
+    try:
+        # Executes Rscript inline to install missing CRAN binaries on the fly
+        subprocess.run(["Rscript", "-e", r_auto_install_code], check=True)
+    except Exception as e:
+        logger.warning(f"⚠️ Could not auto-verify R dependency 'gamsel': {e}")
+#########################################################################################     
 
 def main(input_dir: str, output_dir: str, chunk_size: int, workers: int, 
          modality: str, batch: str, skip_reductions: bool, keep_temp_files: bool, verbose: bool):
-   
-    # 1. Prepare the execution environment
+    
+    # 0. To fix cases where R packages are not on conda repo - e.g. gamsel missing from windows repo
+    install_r_dependencies()
+          
+    # 1. Make directory for results and temp files
     os.makedirs(output_dir, exist_ok=True)
     
-    # 2. Hand off control to the master orchestrator
+    # 2. CLI arguments to main
     run_batch_pipeline(
         input_dir=input_dir, 
         output_dir=output_dir, 
