@@ -80,9 +80,13 @@ predictions_processed <- filter_low_probability(
 target_col <- "predictions2" 
 
 results_df <- data.frame(
-  predictions_filtered_coarse = predictions_processed[["coarse_grain"]][[target_col]],
-  predictions_filtered_mid    = predictions_processed[["mid_grain"]][[target_col]],
-  predictions_filtered_fine   = predictions_processed[["fine_grain"]][[target_col]],
+  predictions_coarse = predictions_processed[["coarse_grain"]][["predictions"]],
+  predictions_mid    = predictions_processed[["mid_grain"]][["predictions"]],
+  predictions_fine   = predictions_processed[["fine_grain"]][["predictions"]],
+  predictions_filtered_coarse = predictions_processed[["coarse_grain"]][["predictions2"]],
+  predictions_filtered_mid    = predictions_processed[["mid_grain"]][["predictions2"]],
+  predictions_filtered_fine   = predictions_processed[["fine_grain"]][["predictions2"]],
+  predictions_coarse_probability = predictions_processed[["coarse_grain"]][["probability"]],
   row.names                   = rownames(meta_df)
 )
 

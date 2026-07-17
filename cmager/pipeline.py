@@ -323,9 +323,14 @@ def process_single_sample(
               keep_temp_files=keep_temp_files,
               verbose=verbose,
             )
+            chunk.obs['cmager_celltype_coarse'] = filter_results['predictions_coarse'].values
+            chunk.obs['cmager_celltype_mid']    = filter_results['predictions_mid'].values
+            chunk.obs['cmager_celltype_fine']   = filter_results['predictions_fine'].values
             chunk.obs['cmager_celltype_coarse_filtered'] = filter_results['predictions_filtered_coarse'].values
             chunk.obs['cmager_celltype_mid_filtered']    = filter_results['predictions_filtered_mid'].values
             chunk.obs['cmager_celltype_fine_filtered']   = filter_results['predictions_filtered_fine'].values
+            chunk.obs['cmager_coarse_probability']       = filter_results['predictions_coarse_probability'].values
+            
             
             ################################
             # Resolve AnnData 'uns' bugs with scanpy log1p
