@@ -12,7 +12,7 @@ dependencies:
   - numpy
   - pandas
   - scanpy
-  - anndata
+  - anndata<0.13
   - click
 
   # R Runtime & basic packages
