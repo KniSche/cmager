@@ -561,6 +561,7 @@ def run_batch_pipeline(input_dir: str, output_dir: str, chunk_size: int, skip_re
     original_barcode_order = []
     
     for sample_id, info in discovered.items():
+        prefix = f"{sample_id}_"
         if info["type"] == "10x":
             total_expected_chunks += 1
             # Record 10x cell names layout sequences
