@@ -12,19 +12,19 @@ from cmager.pipeline import run_batch_pipeline
 logger = logging.getLogger("cmager")
 
 # function for installing missing packages in R
-#########################################################################################
-def install_r_dependencies():
-    r_auto_install_code = """
-    if (!requireNamespace('gamsel', quietly = TRUE)) {
-        options(repos = c(CRAN = 'https://cloud.r-project.org'))
-        install.packages('gamsel', quiet = TRUE)
-    }
-    """
-    try:
-        subprocess.run(["Rscript", "-e", r_auto_install_code], check=True)
-    except Exception as e:
-        logger.warning(f"⚠️ Could not auto-verify R dependency 'gamsel': {e}")
-#########################################################################################     
+# #########################################################################################
+# def install_r_dependencies():
+#     r_auto_install_code = """
+#     if (!requireNamespace('gamsel', quietly = TRUE)) {
+#         options(repos = c(CRAN = 'https://cloud.r-project.org'))
+#         install.packages('gamsel', quiet = TRUE)
+#     }
+#     """
+#     try:
+#         subprocess.run(["Rscript", "-e", r_auto_install_code], check=True)
+#     except Exception as e:
+#         logger.warning(f"⚠️ Could not auto-verify R dependency 'gamsel': {e}")
+# #########################################################################################     
 
 
 
@@ -115,7 +115,7 @@ def main(input_dir: str, output_dir: str, chunk_size: int, workers: int,
          modality: str, batch: str, skip_reductions: bool, keep_temp_files: bool, verbose: bool):
     
     # 0. To fix cases where R packages are not on conda repo - e.g. gamsel missing from windows repo
-    install_r_dependencies()
+    # install_r_dependencies()
           
     # 1. Make directory for results and temp files
     os.makedirs(output_dir, exist_ok=True)
