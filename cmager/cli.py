@@ -11,6 +11,26 @@ from cmager.pipeline import run_batch_pipeline
 
 logger = logging.getLogger("cmager")
 
+# function for installing missing packages in R
+#########################################################################################
+def install_r_dependencies():
+    r_auto_install_code = """
+    if (!requireNamespace('gamsel', quietly = TRUE)) {
+        options(repos = c(CRAN = 'https://cloud.r-project.org'))
+        install.packages('gamsel', quiet = TRUE)
+    }
+    """
+    try:
+        subprocess.run(["Rscript", "-e", r_auto_install_code], check=True)
+    except Exception as e:
+        logger.warning(f"⚠️ Could not auto-verify R dependency 'gamsel': {e}")
+#########################################################################################     
+
+
+
+
+# CLI stuff
+#########################################################################################     
 SPLASH_SCREEN = r"""
  ___________________________________________________________________________
  
@@ -36,9 +56,6 @@ class SplashCommand(click.Command):
         super().format_help(ctx, formatter)
      
 @click.command(cls=SplashCommand, context_settings=dict(help_option_names=['-h', '--help']))
-
-
-
 @click.version_option(version="0.1.3")
 @click.option(
     "--input-dir", "-i",
@@ -94,26 +111,6 @@ class SplashCommand(click.Command):
     is_flag=True,
     help="Prints status updates (very detailed) across all workers in the terminal."
 )
-
-#########################################################################################
-def install_r_dependencies():
-    """
-    Checks for missing R packages and silently installs CRAN binaries 
-    during first execution. Requires zero compilers on Windows/macOS/Linux.
-    """
-    r_auto_install_code = """
-    if (!requireNamespace('gamsel', quietly = TRUE)) {
-        options(repos = c(CRAN = 'https://cloud.r-project.org'))
-        install.packages('gamsel', quiet = TRUE)
-    }
-    """
-    try:
-        # Executes Rscript inline to install missing CRAN binaries on the fly
-        subprocess.run(["Rscript", "-e", r_auto_install_code], check=True)
-    except Exception as e:
-        logger.warning(f"⚠️ Could not auto-verify R dependency 'gamsel': {e}")
-#########################################################################################     
-
 def main(input_dir: str, output_dir: str, chunk_size: int, workers: int, 
          modality: str, batch: str, skip_reductions: bool, keep_temp_files: bool, verbose: bool):
     
