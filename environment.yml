@@ -20,7 +20,7 @@ dependencies:
   - r-readr
   - r-foreach
   - r-mda
-  - r-gamsel
+  # - r-gamsel ### install gamsel on first run due to missing package in repos
   - r-Matrix
   - r-matrixStats
   - r-anndata
