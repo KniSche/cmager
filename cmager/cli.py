@@ -11,7 +11,7 @@ from cmager.pipeline import run_batch_pipeline
 
 logger = logging.getLogger("cmager")
 
-function for installing missing packages in R
+### function for installing missing packages in R
 #########################################################################################
 def install_r_dependencies():
     r_auto_install_code = """
@@ -29,7 +29,7 @@ def install_r_dependencies():
 
 
 
-# CLI stuff
+### CLI stuff
 #########################################################################################     
 SPLASH_SCREEN = r"""
  ___________________________________________________________________________
