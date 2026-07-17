@@ -22,12 +22,13 @@ The pipeline automates:
 
 ## Installation & Setup
 
-Because this tool uses both R and Python, it requires a custom environment. It was build and tested in conda using the supplied environment file. Firstly, rebuild the working environment using the provided conda `environment.yml` file. This handles all specific installations, including Scanpy, AnnData, CellTypist, and utilities.
+Because this tool uses both R and Python, it requires a custom environment. It was build and tested in conda in Linux (Ubuntu 24.04) using the supplied environment file. Firstly, rebuild the working environment using the provided conda `environment.yml` file. This handles all specific installations, including Python with the packages Scanpy, AnnData, CellTypist, and others utilities.
 
 ### Prerequisites
 Ensure you have [Miniconda](https://docs.conda.io/en/latest/miniconda.html) or [Anaconda](https://www.anaconda.com/) installed on your machine.
 
 ### Step-by-Step Installation using conda and pip
+Installation should only take a few minutes for all steps to be complete. 
 
 1. **Create the Environment from the YAML File**
    This command reads the `environment.yml` configuration from this repository to resolves cross-dependencies and build the environment called `cmager`. This step takes a minute or two while conda solves the environment:
@@ -35,18 +36,18 @@ Ensure you have [Miniconda](https://docs.conda.io/en/latest/miniconda.html) or [
    conda env create -f https://raw.githubusercontent.com/knische/cmager/main/environment.yml
    ```
    
-2. **Activate the conda environment**
+2. **Activate the conda environment:**
    ```bash
    conda activate cmager
    ```
       
-2. **using pip to install from github**
+2. **using pip to install from github:**
    This command installs the package cmager from this repository:
    ```bash
    pip install git+https://github.com/knische/cmager.git
    ```
 
-4. **confirm that the package is installed**
+4. **confirm that the package is installed:**
    Check out the usage and help page. This step may take a moment the first time:
    ```bash
    cmager --help
@@ -56,7 +57,7 @@ Ensure you have [Miniconda](https://docs.conda.io/en/latest/miniconda.html) or [
 
 ## Usage
 
-1. **quick usage**
+1. **quick usage:**
    Typical CLI usage where input directory contains either 10X matrix directories (matrix.mtx, features.tsv, barcodes.tsv), or anndata.h5ad objects.
    ```bash
    cmager -i "input/directory" -o "output/directory" modality "nuclei"
