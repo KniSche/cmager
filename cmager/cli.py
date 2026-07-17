@@ -4,12 +4,12 @@ Command Line Interface (CLI) for CMageR.
 
 import os
 import click
-import subprocess
-import logging
+#import subprocess
+#import logging
 
 from cmager.pipeline import run_batch_pipeline
 
-logger = logging.getLogger("cmager")
+#logger = logging.getLogger("cmager")
 
 # function for installing missing packages in R
 # #########################################################################################
