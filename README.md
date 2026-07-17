@@ -60,7 +60,7 @@ Installation should only take a few minutes for all steps to be complete.
 1. **quick usage:**
    Typical CLI usage where input directory contains either 10X matrix directories (matrix.mtx, features.tsv, barcodes.tsv), or anndata.h5ad objects.
    ```bash
-   cmager -i "input/directory" -o "output/directory" modality "nuclei"
+   cmager -i "input/directory" -o "output/directory" --modality "nuclei"
    ```
 
 
