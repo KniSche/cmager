@@ -272,7 +272,15 @@ def process_single_sample(
             else:
                 # 10X matrices are already loaded in memory, so we just copy the view
                 chunk = chunk_view.copy()
+            
+            # store the original barcode (as supplied in file) for easily pulling it out   
+            if "original_barcode" not in chunk.obs.columns:
+                chunk.obs["original_barcode"] = chunk.obs_names.astype(str)
                 
+            # Ensure that the prefix / barcode combinations are in place
+            chunk.obs_names = [
+                f"{sample_id}_{bc}" if not str(bc).startswith(f"{sample_id}_") else str(bc)
+            ]    
                 
             # 3a. Modality validation
             if modality:
@@ -556,14 +564,17 @@ def run_batch_pipeline(input_dir: str, output_dir: str, chunk_size: int, skip_re
             total_expected_chunks += 1
             # Record 10x cell names layout sequences
             adata_header = sc.read_10x_mtx(info["path"], var_names='gene_symbols', cache=False)
-            original_barcode_order.extend(adata_header.obs_names.astype(str).tolist())
+            # Prefix sample_id to guarantee global uniqueness
+            prefixed_bcs = [f"{sample_id}_{bc}" for bc in adata_header.obs_names.astype(str)]
+            original_barcode_order.extend(prefixed_bcs)
         else:
             adata_header = sc.read_h5ad(info["path"], backed="r")
             total_cells = adata_header.shape[0]
             chunks_for_sample = math.ceil(total_cells / chunk_size)
             total_expected_chunks += chunks_for_sample
-            # Record H5AD cell names layout sequences
-            original_barcode_order.extend(adata_header.obs_names.astype(str).tolist())
+            # Prefix sample_id to guarantee global uniqueness
+            prefixed_bcs = [f"{sample_id}_{bc}" for bc in adata_header.obs_names.astype(str)]
+            original_barcode_order.extend(prefixed_bcs)
 
     logger.debug(f"📊 Total workload calculated: {total_expected_chunks} streaming chunks across {len(discovered)} datasets.")
     
