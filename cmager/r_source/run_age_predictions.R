@@ -64,6 +64,7 @@ tech_genes  <- readRDS(file.path(script_dir, "resources", "CvN.rds"))
 adata <- anndata::read_h5ad(chunk_h5ad_path)
 input_data <- adata$X
 meta_df <- adata$obs
+  rownames(meta_df) = adata$obs_names # some weird issue with rownames not being taken from the obs df
 modality <- meta_df[, "modality"]
 
 # Format prior predictions into the list structure required by the GAM functions
