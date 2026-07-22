@@ -31,7 +31,7 @@ Ensure you have [Miniconda](https://docs.conda.io/en/latest/miniconda.html) or [
 Installation should only take a few minutes for all steps to be complete. 
 
 1. **Create the Environment from the YAML File**
-   This command reads the `environment.yml` configuration from this repository to resolves cross-dependencies and build the environment called `cmager`. This step takes a minute or two while conda solves the environment:
+   This command reads the `environment.yml` configuration from this repository to resolve cross-dependencies and build the environment called `cmager`, containing Python and R. This step takes a minute or two while conda solves the environment:
    ```bash
    conda env create -f https://raw.githubusercontent.com/knische/cmager/main/environment.yml
    ```
@@ -41,13 +41,17 @@ Installation should only take a few minutes for all steps to be complete.
    conda activate cmager
    ```
       
-2. **using pip to install from github:**
-   This command installs the package cmager from this repository:
+3. **Use pip to install from github:**
+   If you have git:
    ```bash
    pip install git+https://github.com/knische/cmager.git
    ```
+   or, in all cases:
+   ```bash
+   pip install https://github.com/knische/cmager/archive/refs/heads/main.zip
+   ```
 
-4. **confirm that the package is installed:**
+4. **Confirm that the package is installed:**
    Check out the usage and help page. This step may take a moment the first time:
    ```bash
    cmager --help
