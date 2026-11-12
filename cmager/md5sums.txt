@@ -1,4 +1,0 @@
-2d42a39518f7e8cde4f737be535fef15  cli.py
-92e912f4237a6b86f1eb2a1a94d013e1  __init__.py
-876b95d49b80ac953fac873d52fa023d  __main__ .py
-2f996f2918c6e338601ca768c2276059  pipeline.py
