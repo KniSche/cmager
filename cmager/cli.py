@@ -56,7 +56,7 @@ class SplashCommand(click.Command):
         super().format_help(ctx, formatter)
      
 @click.command(cls=SplashCommand, context_settings=dict(help_option_names=['-h', '--help']))
-@click.version_option(version="0.1.3")
+@click.version_option(version="0.1.4")
 @click.option(
     "--input-dir", "-i",
     type=click.Path(exists=True, file_okay=False, dir_okay=True, readable=True),

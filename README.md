@@ -60,18 +60,67 @@ Installation should only take a few minutes for all steps to be complete.
 
 
 ## Usage
-
-1. **quick usage:**
-   Typical CLI usage where input directory contains either 10X matrix directories (matrix.mtx, features.tsv, barcodes.tsv), or anndata.h5ad objects.
+1. **quick usage**
+   Typical CLI usage where input directory contains either multiple 10X matrix directories (matrix.mtx, features.tsv, barcodes.tsv), or multiple anndata.h5ad objects.
    ```bash
-   cmager -i "input/directory" -o "output/directory" --modality "nuclei"
+   cmager -i "input_directory" -o "output_directory" --modality "nuclei"
    ```
 
+2. **Advanced example**
+   Example where a single anndata.h5ad file is input, and its metadata .obs contains "donor", and "modality" for batch, and modality arguments respectively.
+   ```bash
+   cmager -i "input_directory/all_data" -o "output_directory" --modality "modality" --batch "donor" -workers 12 --verbose --skip-reductions
+   ```
 
+## Inputs and Parameters
 
+### Supported Input Formats
+
+`cmager` automatically detects and ingests any of the following directory structures passed to `--input-dir`:
+
+```text
+# Option 1: Standard 10X Genomics CellRanger directories
+input_directory/
+├── sample_id_01/
+│   ├── matrix.mtx.gz
+│   ├── barcodes.tsv.gz
+│   └── features.tsv.gz
+└── sample_id_02/
+    ├── matrix.mtx.gz
+    ├── barcodes.tsv.gz
+    └── features.tsv.gz
+
+# Option 2: Individual AnnData (.h5ad) files
+input_directory/
+├── sample_id_01.h5ad
+└── sample_id_02.h5ad
+
+# Option 3: Single merged AnnData (.h5ad) file
+input_directory/
+└── all_data/
+    └── all_data.h5ad
+```
+
+### CLI Options
+
+| Option | Requirement / Default | Description |
+| :--- | :--- | :--- |
+| `-i, --input-dir DIRECTORY` | **Required** | Directory containing `.h5ad` files or 10X CellRanger output folders. |
+| `-o, --output-dir DIRECTORY` | **Required** | Directory to save individual sample results and the final aggregated dataset. |
+| `-m, --modality TEXT` | **Required** | Dataset modality (`cells` or `nuclei`), or the `.obs` column containing this metadata. |
+| `-c, --chunk-size INTEGER` | Default: `50000` | Number of cells to process per streaming chunk. |
+| `-w, --workers INTEGER` | Default: `1` | Number of parallel worker processes to spawn. |
+| `-b, --batch TEXT` | Optional | Column name in `.obs` to split large datasets by for optimized parallel processing. |
+| `--skip-reductions` | Flag (`False`) | Skips PCA and UMAP dimensional reductions to save memory. |
+| `--keep-temp-files` | Flag (`False`) | Preserves intermediate processing files in `output_dir/temp_files` for debugging. |
+| `-v, --verbose` | Flag (`False`) | Prints detailed status updates across all workers in the terminal. |
+| `--version` | Flag | Show the version and exit. |
+| `-h, --help` | Flag | Show this help message and exit. |
+	
 
 ## Results
-When a user runs the batch pipeline, the framework processes assets across a temporary workspace and automatically houses variables cleanly upon execution:
+The output directory will contain a concatenated anndata.h5ad object as well as a separate results.csv file.
+Additionally, per batch directories are created each with its respective results.
 
 ```text
 output_directory/
@@ -80,9 +129,10 @@ output_directory/
 ├── sample_id_01/                       # Neatly organized sample-specific directory
 │   ├── sample_id_01_annotated.h5ad     # Individual processed AnnData matrix
 │   ├── sample_id_01_metadata_table.csv # Sample specific metrics
-│   └── sample_id_01_gene_mapping_audit.csv
+│   └── sample_id_01_gene_mapping_audit.csv # Mapping table of the genes mapped back to the model
 └── sample_id_02/
     ├── sample_id_02_annotated.h5ad
-    └── sample_id_02_metadata_table.csv
+    ├── sample_id_02_metadata_table.csv
+    └── sample_id_02_gene_mapping_audit.csv
 ```
 

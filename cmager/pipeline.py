@@ -144,7 +144,7 @@ def pre_split_datasets_by_batch(discovered: Dict[str, dict], batch_key: str, out
 
 def standardise_gene_symbols(adata: ad.AnnData, ref_features_df: pd.DataFrame, min_match_threshold: float = 0.10) -> ad.AnnData:
     """
-    Scans the adata.var_names and all var columns against the model reference list.
+    Scans adata.var_names and all var columns against the model reference list.
     Independently locates the best columns for Gene Symbols and Ensembl IDs.
     """
     # Extract reference sets using column positions (0 = Ensembl, 1 = Symbol)
@@ -162,14 +162,14 @@ def standardise_gene_symbols(adata: ad.AnnData, ref_features_df: pd.DataFrame, m
         sym_rate = sym_matches / len(ref_symbols) if ref_symbols else 0
         return ens_rate, sym_rate
 
-    # 1. Evaluate current var_names index
+    # Evaluate current var_names index
     current_genes = adata.var_names.astype(str).tolist()
     best_ens_rate, best_sym_rate = get_match_rates(current_genes)
     best_ens_col, best_sym_col = 'index', 'index'
     
     logger.debug(f"Checking index. Initial rates -> Ensembl: {best_ens_rate:.2%} | Symbol: {best_sym_rate:.2%}")
 
-    # 2. Scan available columns for superior matches
+    # Scan available columns for superior matches
     for col in adata.var.columns:
         sample_genes = adata.var[col].astype(str).tolist()
         ens_r, sym_r = get_match_rates(sample_genes)
@@ -180,7 +180,7 @@ def standardise_gene_symbols(adata: ad.AnnData, ref_features_df: pd.DataFrame, m
         if sym_r > best_sym_rate:
             best_sym_rate, best_sym_col = sym_r, col
 
-    # 3. Apply Ensembl IDs (Force into 'gene_ids' for downstream mapping)
+    # Apply Ensembl IDs
     if best_ens_rate >= min_match_threshold:
         logger.debug(f"Rescuing Ensembl IDs from '{best_ens_col}' (Match rate: {best_ens_rate:.2%})")
         if best_ens_col == 'index':
@@ -188,7 +188,7 @@ def standardise_gene_symbols(adata: ad.AnnData, ref_features_df: pd.DataFrame, m
         else:
             adata.var['gene_ids'] = adata.var[best_ens_col].astype(str)
 
-    # 4. Apply Gene Symbols (Switch var_names if a better column exists)
+    # Apply Gene Symbols
     if best_sym_rate >= min_match_threshold:
         if best_sym_col != 'index':
             logger.debug(f"Switching var_names to superior symbol column: '{best_sym_col}' (Match rate: {best_sym_rate:.2%})")
@@ -202,11 +202,11 @@ def standardise_gene_symbols(adata: ad.AnnData, ref_features_df: pd.DataFrame, m
     else:
         logger.info(f"⚠️ Warning: Best gene symbol match rate is low ({best_sym_rate:.2%}). Relying on Ensembl IDs for mapping.")
 
+    # ─── 2. SAFE TO MAKE VAR NAMES UNIQUE IN RAM ───
     adata.var_names_make_unique()
+        
     return adata
     
-
-
 def process_single_sample(
     sample_id: str, 
     info: dict, 
@@ -266,16 +266,12 @@ def process_single_sample(
             # 1. Take the slice (creates a view)
             chunk_view = source_stream[start_idx:end_idx]
             
-            # 2. Safely resolve the view into a standalone, in-memory object
-            if info["type"] == "h5ad":
-                chunk = chunk_view.to_memory()
-            else:
-                # 10X matrices are already loaded in memory, so we just copy the view
-                chunk = chunk_view.copy()
-            
-            # store the original barcode (as supplied in file) for easily pulling it out   
-            if "original_barcode" not in chunk.obs.columns:
-                chunk.obs["original_barcode"] = chunk.obs_names.astype(str)
+            # 2. Materialize slice into a pure, unbacked RAM object
+            chunk = ad.AnnData(
+                X=chunk_view.X[:],
+                obs=chunk_view.obs.copy(),
+                var=chunk_view.var.copy(),
+            )
 
             prefix = f"{sample_id}_"
             chunk.obs_names = [
@@ -451,19 +447,17 @@ def concatenate_and_save(processed_file_paths: List[str], output_dir: str, origi
     logger.debug(f"🧩 Merging tracking records for {len(processed_file_paths)} datasets...")
 
     # --- PART 1: CONCATENATING LIGHTWEIGHT METADATA TABLES ---
-    first_csv = True
+    metadata_dfs = []
     for h5ad_path in processed_file_paths:
         csv_path = h5ad_path.replace("_annotated.h5ad", "_metadata_table.csv")
-        
         if os.path.exists(csv_path):
-            df = pd.read_csv(csv_path)
-            if first_csv:
-                df.to_csv(master_csv_path, mode='w', index=False)
-                first_csv = False
-            else:
-                df.to_csv(master_csv_path, mode='a', header=False, index=False)
-    
-    logger.debug(f"💾 Master metadata table successfully pooled at: {master_csv_path}")
+            metadata_dfs.append(pd.read_csv(csv_path))
+            
+    if metadata_dfs:
+        # Outer join aligns disparate column headers across samples and fills gaps with NaN
+        master_df = pd.concat(metadata_dfs, axis=0, join="outer", ignore_index=True)
+    else:
+        master_df = pd.DataFrame()
 
     # --- PART 2: MATRIX CONCATENATION ---
     logger.debug("📦 Pooling expression matrices sequentially...")
@@ -496,16 +490,19 @@ def concatenate_and_save(processed_file_paths: List[str], output_dir: str, origi
     if original_barcode_order:
         logger.debug("🎯 Restoring original barcode sequence sorting across final object...")
         
-        # 1. Align the expression matrix reference matrix-side
+        # 1. Align expression matrix
         aggregated_adata = aggregated_adata[original_barcode_order].copy()
         
-        # 2. Align the master tracking table CSV structure
-        master_df = pd.read_csv(master_csv_path)
-        master_df.set_index("cell_barcode", inplace=True, drop=False)
-        master_df = master_df.reindex(original_barcode_order)
+        # 2. Align metadata tracking table
+        if not master_df.empty and "cell_barcode" in master_df.columns:
+            master_df.set_index("cell_barcode", inplace=True, drop=False)
+            master_df = master_df.reindex(original_barcode_order)
+
+    # Save final aggregated files
+    if not master_df.empty:
         master_df.to_csv(master_csv_path, index=False)
-        
-    # Write aggregated matrix tracking object
+        logger.debug(f"💾 Master metadata table successfully pooled at: {master_csv_path}")
+
     aggregated_adata.write_h5ad(master_h5ad_path)
     logger.debug(f"💾 All objects aggregated and saved to: {master_h5ad_path}")
 
@@ -532,7 +529,7 @@ def concatenate_and_save(processed_file_paths: List[str], output_dir: str, origi
             if os.path.exists(source_path):
                 shutil.move(source_path, destination_path)
                 logger.debug(f"  Moved: {target_file} -> {sample_id}/")
-        
+                
         
 def run_batch_pipeline(input_dir: str, output_dir: str, chunk_size: int, skip_reductions: bool, workers: int, 
                        keep_temp_files: bool = False, modality: str = None, batch_key: str = None, verbose: bool = False):
